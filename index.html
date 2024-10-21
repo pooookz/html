@@ -1,0 +1,244 @@
+import React, { useState } from 'react';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { v4 as uuidv4 } from 'uuid'; // Bruges til unik ID-generering
+
+const ForretningsSystem = () => {
+  const [side, setSide] = useState('kunde');
+  const [soeg, setSoeg] = useState('');
+
+  return (
+    <Card>
+      <CardHeader>Forretningsstyringssystem</CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <Button
+            onClick={() => setSide('kunde')}
+            className={side === 'kunde' ? 'bg-blue-500' : ''}
+          >
+            Kundeadministration
+          </Button>
+          <Button
+            onClick={() => setSide('arbejdsordre')}
+            className={side === 'arbejdsordre' ? 'bg-blue-500' : ''}
+          >
+            Arbejdsordre-administration
+          </Button>
+        </div>
+
+        <Input
+          placeholder="Søg..."
+          value={soeg}
+          onChange={(e) => setSoeg(e.target.value)}
+        />
+
+        {side === 'kunde' ? (
+          <KundeadministrationPage soeg={soeg} />
+        ) : (
+          <ArbejdsordreAdministrationPage soeg={soeg} />
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const KundeadministrationPage = ({ soeg }) => {
+  const [kunder, setKunder] = useState([]);
+  const [nyKunde, setNyKunde] = useState({
+    id: uuidv4(), // Unik ID-generering
+    navn: '',
+    email: '',
+    telefon: '',
+    adresse: '',
+    noter: ''
+  });
+
+  const validerKunde = () => {
+    if (!nyKunde.navn || !nyKunde.email || !nyKunde.telefon || !nyKunde.adresse) {
+      alert('Udfyld venligst alle nødvendige kundeinformationer.');
+      return false;
+    }
+    return true;
+  };
+
+  const haandterKundeInput = (e) => {
+    setNyKunde({ ...nyKunde, [e.target.name]: e.target.value });
+  };
+
+  const opretKunde = () => {
+    if (validerKunde()) {
+      setKunder([...kunder, nyKunde]);
+      setNyKunde({
+        id: uuidv4(), // Generer ny unik ID
+        navn: '',
+        email: '',
+        telefon: '',
+        adresse: '',
+        noter: ''
+      });
+    }
+  };
+
+  const filtreredeKunder = kunder.filter((kunde) =>
+    kunde.navn.toLowerCase().includes(soeg.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h2 className="text-lg font-medium mb-4">Kundeadministration</h2>
+      <div className="space-y-4">
+        <Input
+          name="navn"
+          label="Kundens Navn"
+          placeholder="Indtast kundens navn"
+          value={nyKunde.navn}
+          onChange={haandterKundeInput}
+        />
+        <Input
+          name="email"
+          label="Email"
+          placeholder="Indtast kundens email"
+          value={nyKunde.email}
+          onChange={haandterKundeInput}
+        />
+        <Input
+          name="telefon"
+          label="Telefon"
+          placeholder="Indtast kundens telefonnummer"
+          value={nyKunde.telefon}
+          onChange={haandterKundeInput}
+        />
+        <Textarea
+          name="adresse"
+          label="Adresse"
+          placeholder="Indtast kundens adresse"
+          value={nyKunde.adresse}
+          onChange={haandterKundeInput}
+        />
+        <Textarea
+          name="noter"
+          label="Noter"
+          placeholder="Tilføj noter om kunden"
+          value={nyKunde.noter}
+          onChange={haandterKundeInput}
+        />
+        <div className="flex justify-end">
+          <Button onClick={opretKunde}>Tilføj Kunde</Button>
+        </div>
+      </div>
+
+      <table className="w-full mt-8">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Navn</th>
+            <th>Email</th>
+            <th>Telefon</th>
+            <th>Adresse</th>
+            <th>Noter</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtreredeKunder.map((kunde) => (
+            <tr key={kunde.id}>
+              <td>{kunde.id}</td>
+              <td>{kunde.navn}</td>
+              <td>{kunde.email}</td>
+              <td>{kunde.telefon}</td>
+              <td>{kunde.adresse}</td>
+              <td>{kunde.noter}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const ArbejdsordreAdministrationPage = ({ soeg }) => {
+  const [arbejdsordrer, setArbejdsordrer] = useState([]);
+  const [nyOrdre, setNyOrdre] = useState({
+    id: uuidv4(), // Unik ID-generering
+    kundeNavn: '',
+    beskrivelse: '',
+    status: 'Modtaget',
+    dele: [],
+    arbejdskraft: 0,
+    total: 0
+  });
+
+  const haandterOrdreInput = (e) => {
+    setNyOrdre({ ...nyOrdre, [e.target.name]: e.target.value });
+  };
+
+  const opretArbejdsordre = () => {
+    if (nyOrdre.kundeNavn && nyOrdre.beskrivelse) {
+      setArbejdsordrer([...arbejdsordrer, nyOrdre]);
+      setNyOrdre({
+        id: uuidv4(),
+        kundeNavn: '',
+        beskrivelse: '',
+        status: 'Modtaget',
+        dele: [],
+        arbejdskraft: 0,
+        total: 0
+      });
+    } else {
+      alert('Udfyld venligst alle nødvendige felter.');
+    }
+  };
+
+  const filtreredeOrdrer = arbejdsordrer.filter((ordre) =>
+    ordre.kundeNavn.toLowerCase().includes(soeg.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h2 className="text-lg font-medium mb-4">Arbejdsordre-administration</h2>
+      <div className="space-y-4">
+        <Input
+          name="kundeNavn"
+          label="Kundens Navn"
+          placeholder="Indtast kundens navn"
+          value={nyOrdre.kundeNavn}
+          onChange={haandterOrdreInput}
+        />
+        <Textarea
+          name="beskrivelse"
+          label="Beskrivelse"
+          placeholder="Indtast beskrivelse af arbejdsordren"
+          value={nyOrdre.beskrivelse}
+          onChange={haandterOrdreInput}
+        />
+        <div className="flex justify-end">
+          <Button onClick={opretArbejdsordre}>Opret Arbejdsordre</Button>
+        </div>
+      </div>
+
+      <table className="w-full mt-8">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Kunde</th>
+            <th>Beskrivelse</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtreredeOrdrer.map((ordre) => (
+            <tr key={ordre.id}>
+              <td>{ordre.id}</td>
+              <td>{ordre.kundeNavn}</td>
+              <td>{ordre.beskrivelse}</td>
+              <td>{ordre.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default ForretningsSystem;
